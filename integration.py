@@ -43,6 +43,8 @@ class Integration:
         field_list = self.data_trackor.get_field_lists(mapping_trackor_fields, source_key_field)
         field_dict, task_dict = self.data_trackor.get_dicts(mapping_trackor_fields)
 
+        is_field_clean_trigger = False
+        is_clean_trigger_task = False
         source_data = self.data_trackor.get_trackor_data(source_trackor_type, field_list, source_trigger)
         for data in source_data:
             trackor_id = data[self.source_trackor.ov_source_fields.ID]
@@ -50,16 +52,21 @@ class Integration:
             dest_key_dict = {destination_key_field: data[source_key_field]}
             fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
  
-            destination_trackor = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
-            destination_trackor_id = destination_trackor[self.source_trackor.ov_source_fields.ID]
+            destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
+            if destination_trackor is None:
+                continue
 
-            if len(task_dict) > 0:
-                source_workplan_id = self.data_trackor.get_workplan_id(trackor_id, source_wp)
-                tasks_dict = self.data_trackor.get_task_data(source_workplan_id, task_dict)
-                destination_workplan_id = self.destination_trackor.get_workplan_id(destination_trackor_id, destination_wp)
-                self.destination_trackor.update_task_data(destination_workplan_id, tasks_dict)
+            else:
+                destination_trackor_id = destination_trackor[self.source_trackor.ov_source_fields.ID]
 
-            self.data_trackor.clean_trigger(source_trackor_type, clean_trigger_dict, source_clear_trigger)
+                if len(task_dict) > 0:
+                    source_workplan_id = self.data_trackor.get_workplan_id(trackor_id, source_wp)
+                    tasks_dict = self.data_trackor.get_task_data(source_workplan_id, task_dict)
+                    destination_workplan_id = self.destination_trackor.get_workplan_id(destination_trackor_id, destination_wp)
+                    is_clean_trigger_task = self.destination_trackor.update_task_data(destination_workplan_id, tasks_dict)
+
+            if is_field_clean_trigger and is_clean_trigger_task:
+                self.data_trackor.clean_trigger(source_trackor_type, clean_trigger_dict, source_clear_trigger)
 
 class SourceTrackor:
     def __init__(self, integration_log, ov_url, ov_access_key, ov_secret_key, ov_source_trackor_type, ov_source_fields, ov_source_types, ov_source_status, \
@@ -268,9 +275,10 @@ class DestinationTrackor:
         )
 
         if len(dest_trackor_type.errors) == 0:
-            return dest_trackor_type.jsonData
+            return dest_trackor_type.jsonData, True
         else:
             self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data: Exception [{dest_trackor_type.errors}]')
+            return None, False
 
     def get_workplan_id(self, trackor_id, workplan_name):
         workplans = self.get_workplan(trackor_id, workplan_name)
@@ -295,6 +303,7 @@ class DestinationTrackor:
             return None
 
     def update_task_data(self, workplan_id, task_dict):
+        is_clean_trigger = False
         for task in task_dict.items():
             task_data = self.get_task_data(workplan_id, task[0])
             if task_data is None:
@@ -306,7 +315,7 @@ class DestinationTrackor:
             dynamic_dates_list = []
             if len(task_dict) == 1:
                 task_fields = task_dict
-                self.update_task(task_id, task_fields, dynamic_dates_list)
+                is_clean_trigger = self.update_task(task_id, task_fields, dynamic_dates_list)
 
             else:
                 task_label = None
@@ -326,7 +335,9 @@ class DestinationTrackor:
 
                     dynamic_dates_list.append(task_dict)
 
-                self.update_task(task_id, task_fields, dynamic_dates_list)
+                is_clean_trigger = self.update_task(task_id, task_fields, dynamic_dates_list)
+
+        return is_clean_trigger
 
     def get_task_data(self, workplan_id, order_number):
         self.task.read(
@@ -348,8 +359,11 @@ class DestinationTrackor:
         url = f'https://{self.ov_url}/api/v3/tasks/{task_id}'
         answer = requests.put(url, headers={'content-type': 'application/x-www-form-urlencoded'}, data=json.dumps(fields))
 
-        if answer.ok is False:
+        if answer.ok:
+            return True
+        else:
             self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task: Exception [{answer.text}]')
+            return False
 
 class SourceTrackorFields:
     def __init__(self, ov_source_fields):
