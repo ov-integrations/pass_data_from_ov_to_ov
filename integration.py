@@ -357,7 +357,8 @@ class DestinationTrackor:
             fields[self.ov_task_fields.TASK_DYNAMIC_DATES] = dynamic_dates
 
         url = f'https://{self.ov_url}/api/v3/tasks/{task_id}'
-        answer = requests.put(url, headers={'content-type': 'application/x-www-form-urlencoded'}, data=json.dumps(fields))
+        header = {'content-type': 'application/x-www-form-urlencoded', 'Authorization': f'Bearer {self.ov_access_key}:{self.ov_secret_key}'}
+        answer = requests.put(url, headers=header, data=json.dumps(fields))
 
         if answer.ok:
             return True
