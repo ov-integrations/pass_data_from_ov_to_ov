@@ -1,5 +1,5 @@
 from enum import Enum
-from onevizion import LogLevel, Trackor, WorkPlan, Task
+from onevizion import LogLevel, Trackor, WorkPlan, Task, HTTPBearerAuth
 import json
 import re
 import requests
@@ -357,8 +357,9 @@ class DestinationTrackor:
             fields[self.ov_task_fields.TASK_DYNAMIC_DATES] = dynamic_dates
 
         url = f'https://{self.ov_url}/api/v3/tasks/{task_id}'
-        header = {'content-type': 'application/x-www-form-urlencoded', 'Authorization': f'Bearer {self.ov_access_key}:{self.ov_secret_key}'}
-        answer = requests.put(url, headers=header, data=json.dumps(fields))
+        auth = HTTPBearerAuth(self.ov_access_key, self.ov_secret_key)
+        header = {'content-type': 'application/x-www-form-urlencoded'}
+        answer = requests.patch(url, headers=header, data=json.dumps(fields), auth=auth)
 
         if answer.ok:
             return True
