@@ -277,7 +277,7 @@ class DestinationTrackor:
         if len(dest_trackor_type.errors) == 0:
             return dest_trackor_type.jsonData, True
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data: Exception [{dest_trackor_type.errors}]')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data: Exception [{dest_trackor_type.errors}] for {filter_dict}')
             return None, False
 
     def get_workplan_id(self, trackor_id, workplan_name):
