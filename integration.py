@@ -53,17 +53,17 @@ class Integration:
             fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
  
             destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
-            if destination_trackor is None:
-                continue
+            if len(task_dict) > 0:
+                if destination_trackor is not None:
+                    destination_trackor = self.destination_trackor.get_destination_trackor(destination_trackor_type, dest_key_dict)[0]
 
-            else:
                 destination_trackor_id = destination_trackor[self.source_trackor.ov_source_fields.ID]
-
-                if len(task_dict) > 0:
-                    source_workplan_id = self.data_trackor.get_workplan_id(trackor_id, source_wp)
-                    tasks_dict = self.data_trackor.get_task_data(source_workplan_id, task_dict)
-                    destination_workplan_id = self.destination_trackor.get_workplan_id(destination_trackor_id, destination_wp)
-                    is_clean_trigger_task = self.destination_trackor.update_task_data(destination_workplan_id, tasks_dict)
+                source_workplan_id = self.data_trackor.get_workplan_id(trackor_id, source_wp)
+                tasks_dict = self.data_trackor.get_task_data(source_workplan_id, task_dict)
+                destination_workplan_id = self.destination_trackor.get_workplan_id(destination_trackor_id, destination_wp)
+                is_clean_trigger_task = self.destination_trackor.update_task_data(destination_workplan_id, tasks_dict)
+            else:
+                is_clean_trigger_task = True
 
             if is_field_clean_trigger and is_clean_trigger_task:
                 self.data_trackor.clean_trigger(source_trackor_type, clean_trigger_dict, source_clear_trigger)
@@ -265,6 +265,19 @@ class DestinationTrackor:
         self.ov_task_fields = TaskFields(ov_task_fields)
         self.workplan = WorkPlan(URL=ov_url, userName=ov_access_key, password=ov_secret_key, isTokenAuth=True)
         self.task = Task(URL=ov_url, userName=ov_access_key, password=ov_secret_key, isTokenAuth=True)
+
+    def get_destination_trackor(self, trackor_type, filter_dict):
+        dest_trackor_type = Trackor(trackorType=trackor_type, URL=self.ov_url, userName=self.ov_access_key, password=self.ov_secret_key, isTokenAuth=True)
+        dest_trackor_type.read(
+            filters=filter_dict
+        )
+
+        if len(dest_trackor_type.errors) == 0:
+            return dest_trackor_type.jsonData
+
+        else:
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_destination_trackor: Exception [{dest_trackor_type.errors}]')
+            return None
 
     def update_field_data(self, trackor_type, filter_dict, field_dict):
         dest_trackor_type = Trackor(trackorType=trackor_type, URL=self.ov_url, userName=self.ov_access_key, password=self.ov_secret_key, isTokenAuth=True)
