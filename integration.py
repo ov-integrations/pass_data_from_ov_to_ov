@@ -51,10 +51,15 @@ class Integration:
             clean_trigger_dict = {self.source_trackor.ov_source_fields.ID: trackor_id}
             dest_key_dict = {destination_key_field: data[source_key_field]}
             fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
- 
-            destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
+            destination_trackor = None
+
+            if len(fields_dict) > 0:
+                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
+            else:
+                is_field_clean_trigger = True
+
             if len(task_dict) > 0:
-                if destination_trackor is not None:
+                if destination_trackor is None:
                     destination_trackor = self.destination_trackor.get_destination_trackor(destination_trackor_type, dest_key_dict)[0]
 
                 destination_trackor_id = destination_trackor[self.source_trackor.ov_source_fields.ID]
