@@ -16,9 +16,11 @@ class Integration:
         self.integration_log.add(LogLevel.INFO, 'Starting Integration')
 
         source_trackors = self.source_trackor.get_source_trackors()
-        if len(source_trackors) == 0:
+        len_source_trackors = len(source_trackors)
+        if len_source_trackors == 0:
             raise Exception(f'{self.source_trackor.ov_source_trackor_type_name} Trackors have not been found. Integration is finished.')
 
+        self.integration_log.add(LogLevel.INFO, f'Found {len_source_trackors} {self.source_trackor.ov_source_trackor_type_name} Trackors')
         for source_trackor in source_trackors:
             self.data_handler(source_trackor)
 
@@ -37,22 +39,30 @@ class Integration:
 
         fields_list = self.source_trackor.ov_mapping_fields.get_list()
         mapping_trackor_fields = self.source_trackor.get_mapping_trackors(source_trackor_id, fields_list)
-        if mapping_trackor_fields is None:
+        len_mapping_trackor_fields = len(mapping_trackor_fields)
+        if len_mapping_trackor_fields == 0:
             raise Exception(f'{self.source_trackor.ov_mapping_trackor_type_name} Trackors have not been found. Integration is finished.')
 
+        self.integration_log.add(LogLevel.INFO, f'Found {len_mapping_trackor_fields} {self.source_trackor.ov_mapping_trackor_type_name} Trackors')
         field_list = self.data_trackor.get_field_lists(mapping_trackor_fields, source_key_field)
         field_dict, task_dict = self.data_trackor.get_dicts(mapping_trackor_fields)
 
         is_field_clean_trigger = False
         is_clean_trigger_task = False
         source_data = self.data_trackor.get_trackor_data(source_trackor_type, field_list, source_trigger)
+        len_source_data = len(source_data)
+        if len_source_data == 0:
+            self.integration_log.add(LogLevel.INFO, 'No data found for transfer')
+
+        self.integration_log.add(LogLevel.INFO, f'Found {len_source_data} {source_trackor_type} Trackor data to transfer')
         for data in source_data:
             trackor_id = data[self.source_trackor.ov_source_fields.ID]
             clean_trigger_dict = {self.source_trackor.ov_source_fields.ID: trackor_id}
             dest_key_dict = {destination_key_field: data[source_key_field]}
-            fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
-            destination_trackor = None
+            self.integration_log.add(LogLevel.INFO, f'Get Trackor data from - {data[source_key_field]}')
 
+            destination_trackor = None
+            fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
             if len(fields_dict) > 0:
                 destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
             else:
