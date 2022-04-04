@@ -53,8 +53,9 @@ class Integration:
         len_source_data = len(source_data)
         if len_source_data == 0:
             self.integration_log.add(LogLevel.INFO, 'No data found for transfer')
+        else:
+            self.integration_log.add(LogLevel.INFO, f'Found {len_source_data} {source_trackor_type} Trackor data to transfer')
 
-        self.integration_log.add(LogLevel.INFO, f'Found {len_source_data} {source_trackor_type} Trackor data to transfer')
         for data in source_data:
             trackor_id = data[self.source_trackor.ov_source_fields.ID]
             clean_trigger_dict = {self.source_trackor.ov_source_fields.ID: trackor_id}
