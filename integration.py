@@ -18,7 +18,8 @@ class Integration:
         source_trackors = self.source_trackor.get_source_trackors()
         len_source_trackors = len(source_trackors)
         if len_source_trackors == 0:
-            raise Exception(f'{self.source_trackor.ov_source_trackor_type_name} Trackors have not been found. Integration is finished.')
+            self.integration_log.add(LogLevel.INFO, f'{self.source_trackor.ov_source_trackor_type_name} Trackors have not been found. Integration is finished.')
+            quit()
 
         self.integration_log.add(LogLevel.INFO, f'Found {len_source_trackors} {self.source_trackor.ov_source_trackor_type_name} Trackors')
         for source_trackor in source_trackors:
@@ -41,7 +42,8 @@ class Integration:
         mapping_trackor_fields = self.source_trackor.get_mapping_trackors(source_trackor_id, fields_list)
         len_mapping_trackor_fields = len(mapping_trackor_fields)
         if len_mapping_trackor_fields == 0:
-            raise Exception(f'{self.source_trackor.ov_mapping_trackor_type_name} Trackors have not been found. Integration is finished.')
+            self.integration_log.add(LogLevel.INFO, f'{self.source_trackor.ov_mapping_trackor_type_name} Trackors have not been found. Integration is finished.')
+            quit()
 
         self.integration_log.add(LogLevel.INFO, f'Found {len_mapping_trackor_fields} {self.source_trackor.ov_mapping_trackor_type_name} Trackors')
         field_list = self.data_trackor.get_field_lists(mapping_trackor_fields, source_key_field)
@@ -58,31 +60,37 @@ class Integration:
 
         for data in source_data:
             trackor_id = data[self.source_trackor.ov_source_fields.ID]
+            trackor_key = data[source_key_field]
             clean_trigger_dict = {self.source_trackor.ov_source_fields.ID: trackor_id}
-            dest_key_dict = {destination_key_field: data[source_key_field]}
-            self.integration_log.add(LogLevel.INFO, f'Get Trackor data from - {data[source_key_field]}')
+            dest_key_dict = {destination_key_field: trackor_key}
+            self.integration_log.add(LogLevel.INFO, f'Get {source_trackor_type} Trackor data from - {trackor_key}')
 
             destination_trackor = None
             fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
             if len(fields_dict) > 0:
-                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, dest_key_dict, fields_dict)
+                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, destination_key_field, dest_key_dict, fields_dict)
             else:
                 is_field_clean_trigger = True
 
             if len(task_dict) > 0:
                 if destination_trackor is None:
-                    destination_trackor = self.destination_trackor.get_destination_trackor(destination_trackor_type, dest_key_dict)[0]
+                    destination_trackor = self.destination_trackor.get_destination_trackor(destination_trackor_type, dest_key_dict, trackor_key)
+                    if destination_trackor is None:
+                        continue
 
                 destination_trackor_id = destination_trackor[self.source_trackor.ov_source_fields.ID]
                 source_workplan_id = self.data_trackor.get_workplan_id(trackor_id, source_wp)
                 tasks_dict = self.data_trackor.get_task_data(source_workplan_id, task_dict)
                 destination_workplan_id = self.destination_trackor.get_workplan_id(destination_trackor_id, destination_wp)
-                is_clean_trigger_task = self.destination_trackor.update_task_data(destination_workplan_id, tasks_dict)
+                is_clean_trigger_task = self.destination_trackor.update_task_data(destination_workplan_id, tasks_dict, trackor_key)
             else:
                 is_clean_trigger_task = True
 
             if is_field_clean_trigger and is_clean_trigger_task:
-                self.data_trackor.clean_trigger(source_trackor_type, clean_trigger_dict, source_clear_trigger)
+                self.data_trackor.clean_trigger(source_trackor_type, trackor_key, clean_trigger_dict, source_clear_trigger)
+            else:
+                self.integration_log.add(LogLevel.INFO, f'Trigger has not been updated for {trackor_key}')
+
 
 class SourceTrackor:
     def __init__(self, integration_log, ov_url, ov_access_key, ov_secret_key, ov_source_trackor_type, ov_source_fields, ov_source_types, ov_source_status, \
@@ -159,13 +167,13 @@ class DataTrackor:
                 source_field_name = field[self.ov_mapping_fields.SOURCE_FIELD_NAME]
 
                 if source_field_name is None:
-                    self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_field_lists: One or more fields are empty - {self.ov_mapping_fields.SOURCE_FIELD_NAME}')
+                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_field_lists: One or more fields are empty - {self.ov_mapping_fields.SOURCE_FIELD_NAME}')
 
                 else:
                     field_list.append(source_field_name)
 
             elif field[self.ov_mapping_fields.CLASS] != self.ov_mapping_types.TASK_TRANSFER:
-                self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_field_lists: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
+                self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_field_lists: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
 
         field_list.append(key_field)
 
@@ -180,7 +188,7 @@ class DataTrackor:
                 destination_field_name = field[self.ov_mapping_fields.DESTINATION_FIELD_NAME]
 
                 if source_field_name is None or destination_field_name is None:
-                    self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_dicts: One or more fields are empty - {self.ov_mapping_fields.SOURCE_FIELD_NAME}, \
+                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: One or more fields are empty - {self.ov_mapping_fields.SOURCE_FIELD_NAME}, \
                                                 {self.ov_mapping_fields.DESTINATION_FIELD_NAME}')
 
                 else:
@@ -192,14 +200,14 @@ class DataTrackor:
                 destination_order_number = field[self.ov_mapping_fields.DESTINATION_ORDER_NUMBER]
 
                 if source_order_number is None or source_task_data is None or destination_order_number is None:
-                    self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_dicts: One or more fields are empty - {self.ov_mapping_fields.SOURCE_ORDER_NUMBER}, \
+                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: One or more fields are empty - {self.ov_mapping_fields.SOURCE_ORDER_NUMBER}, \
                                                 {self.ov_mapping_fields.SOURCE_TASK_DATA}, {self.ov_mapping_fields.DESTINATION_ORDER_NUMBER}')
 
                 else:
                     task_dict.update({destination_order_number: {source_order_number: source_task_data}})
 
             else:
-                self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_dicts: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
+                self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
                 continue
 
         return field_dict, task_dict
@@ -211,15 +219,17 @@ class DataTrackor:
 
         return upd_fields_dict
 
-    def clean_trigger(self, trackor_type, filter_dict, field_dict):        
+    def clean_trigger(self, trackor_type, trackor_key, filter_dict, field_dict):        
         data_trackor_type = Trackor(trackorType=trackor_type, URL=self.ov_url, userName=self.ov_access_key, password=self.ov_secret_key, isTokenAuth=True)
         data_trackor_type.update(
             filters=filter_dict, 
             fields=field_dict
         )
 
-        if len(data_trackor_type.errors) > 0:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DataTrackor.clean_trigger: Exception [{data_trackor_type.errors}]')
+        if len(data_trackor_type.errors) == 0:
+            self.integration_log.add(LogLevel.INFO, f'Trigger has been updated for {trackor_key}')
+        else:
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DataTrackor.clean_trigger for {trackor_key}: Exception [{data_trackor_type.errors}]')
 
     def get_workplan_id(self, trackor_id, workplan_name):
         workplans = self.get_workplan(trackor_id, workplan_name)
@@ -273,29 +283,35 @@ class DataTrackor:
 
 
 class DestinationTrackor:
-    def __init__(self, integration_log, ov_url, ov_access_key, ov_secret_key, ov_task_fields):
+    def __init__(self, integration_log, ov_url, ov_access_key, ov_secret_key, ov_task_fields, ov_source_fields):
         self.integration_log = integration_log
         self.ov_url = ov_url
         self.ov_access_key = ov_access_key
         self.ov_secret_key = ov_secret_key
         self.ov_task_fields = TaskFields(ov_task_fields)
+        self.ov_source_fields = SourceTrackorFields(ov_source_fields)
         self.workplan = WorkPlan(URL=ov_url, userName=ov_access_key, password=ov_secret_key, isTokenAuth=True)
         self.task = Task(URL=ov_url, userName=ov_access_key, password=ov_secret_key, isTokenAuth=True)
 
-    def get_destination_trackor(self, trackor_type, filter_dict):
+    def get_destination_trackor(self, trackor_type, filter_dict, trackor_key):
         dest_trackor_type = Trackor(trackorType=trackor_type, URL=self.ov_url, userName=self.ov_access_key, password=self.ov_secret_key, isTokenAuth=True)
         dest_trackor_type.read(
             filters=filter_dict
         )
 
         if len(dest_trackor_type.errors) == 0:
-            return dest_trackor_type.jsonData
+            if len(dest_trackor_type.jsonData) == 0:
+                self.integration_log.add(LogLevel.WARNING, f'Not found {trackor_key} for Trackor Type {trackor_type} - Tasks won''t be updated')
+                return None
+            else:
+                return dest_trackor_type.jsonData[0]
 
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_destination_trackor: Exception [{dest_trackor_type.errors}]')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_destination_trackor for {trackor_key}: \
+                                        Exception [{dest_trackor_type.errors}]')
             return None
 
-    def update_field_data(self, trackor_type, filter_dict, field_dict):
+    def update_field_data(self, trackor_type, key_field, filter_dict, field_dict):
         dest_trackor_type = Trackor(trackorType=trackor_type, URL=self.ov_url, userName=self.ov_access_key, password=self.ov_secret_key, isTokenAuth=True)
 
         dest_trackor_type.update(
@@ -304,9 +320,11 @@ class DestinationTrackor:
         )
 
         if len(dest_trackor_type.errors) == 0:
+            self.integration_log.add(LogLevel.INFO, f'Fields Data updated for {filter_dict[key_field]}')
             return dest_trackor_type.jsonData, True
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data: Exception [{dest_trackor_type.errors}] for {filter_dict}')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data for {filter_dict[key_field]}: \
+                                        Exception [{dest_trackor_type.errors}]')
             return None, False
 
     def get_workplan_id(self, trackor_id, workplan_name):
@@ -331,20 +349,24 @@ class DestinationTrackor:
             self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_workplan: Exception [{self.workplan.errors}]')
             return None
 
-    def update_task_data(self, workplan_id, task_dict):
+    def update_task_data(self, workplan_id, tasks_dict, trackor_key):
         is_clean_trigger = False
-        for task in task_dict.items():
+        is_update_task_warning = False
+        for task in tasks_dict.items():
             task_data = self.get_task_data(workplan_id, task[0])
             if task_data is None:
                 continue
 
+            order_number = task[0]
             task_dict = task[1]
             task_id = task_data[self.ov_task_fields.WP_ID]
             task_fields = {}
             dynamic_dates_list = []
             if len(task_dict) == 1:
                 task_fields = task_dict
-                is_clean_trigger = self.update_task(task_id, task_fields, dynamic_dates_list)
+                is_clean_trigger = self.update_task(task_id, order_number, trackor_key, task_fields, dynamic_dates_list)
+                if is_clean_trigger is False:
+                    is_update_task_warning = True
 
             else:
                 task_label = None
@@ -353,7 +375,7 @@ class DestinationTrackor:
                         task_label = task[1]
                 
                 if task_label is None:
-                    self.integration_log.add(LogLevel.INFO, f'Failed to DestinationTrackor.update_task_data: Exception [" \
+                    self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task_data for {trackor_key}: Exception [" \
                                                 {self.ov_task_fields.TASK_LABEL}" is not found in the dictionary]')
 
                 else:
@@ -364,7 +386,12 @@ class DestinationTrackor:
 
                     dynamic_dates_list.append(task_dict)
 
-                is_clean_trigger = self.update_task(task_id, task_fields, dynamic_dates_list)
+                is_clean_trigger = self.update_task(task_id, order_number, trackor_key, task_fields, dynamic_dates_list)
+                if is_clean_trigger is False:
+                    is_update_task_warning = True
+
+        if is_update_task_warning is True:
+            is_clean_trigger = False
 
         return is_clean_trigger
 
@@ -381,7 +408,7 @@ class DestinationTrackor:
             self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_task_data: Exception [{self.task.errors}]')
             return None
 
-    def update_task(self, task_id, fields={}, dynamic_dates=[]):
+    def update_task(self, task_id, order_number, trackor_key, fields={}, dynamic_dates=[]):
         if len(dynamic_dates)>0:
             fields[self.ov_task_fields.TASK_DYNAMIC_DATES] = dynamic_dates
 
@@ -391,9 +418,11 @@ class DestinationTrackor:
         answer = requests.patch(url, headers=header, data=json.dumps(fields), auth=auth)
 
         if answer.ok:
+            self.integration_log.add(LogLevel.INFO, f'Task Date updated for Order Number {order_number} for {trackor_key}')
             return True
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task: Exception [{answer.text}]')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task for Order Number {order_number} \
+                                        for {trackor_key}: Exception [{answer.text}]')
             return False
 
 class SourceTrackorFields:
