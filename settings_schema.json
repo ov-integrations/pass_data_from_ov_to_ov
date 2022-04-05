@@ -1,0 +1,191 @@
+{
+    "type": "object",
+    "properties": {
+        "ovSourceUrl": {
+            "type": "string",
+            "pattern": "^https://.*"
+        },
+        "ovSourceAccessKey": {
+            "type": "string",
+            "minLength": 1
+        },
+        "ovSourceSecretKey": {
+            "type": "string",
+            "minLength": 1
+        },
+        "ovSourceTrackorType": {
+            "type": "string",
+            "minLength": 1
+        },
+        "ovMappingTrackorType": {
+            "type": "string",
+            "minLength": 1
+        },
+        "ovDestinationUrl": {
+            "type": "string",
+            "pattern": "^https://.*"
+        },
+        "ovDestinationAccessKey": {
+            "type": "string",
+            "minLength": 1
+        },
+        "ovDestinationSecretKey": {
+            "type": "string",
+            "minLength": 1
+        },
+        "ovSourceFields" : {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "status": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "trigger": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "clearTrigger": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceTrackorType": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceKeyField": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceWP": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationTrackorType": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationKeyField": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationWP": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "ovSourceTypes" : {
+            "type": "object",
+            "properties": {
+                "ovToOv": {
+                    "enabled": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "ovSourceStatus" : {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "number",
+                    "minLength": 1
+                }
+            }
+        },
+        "ovMappingFields" : {
+            "type": "object",
+            "properties": {
+                "class": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceFieldName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceFieldTrackorType": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationFieldName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationFieldTrackorType": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceWPName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceOrderNumber": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sourceTaskData": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationWPName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "destinationOrderNumber": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "ovTaskFields" : {
+            "type": "object",
+            "properties": {
+                "wpId": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "wpActive": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "taskLabel": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "taskDateType": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "taskDynamicDates": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "ovMappingTypes" : {
+            "type": "object",
+            "properties": {
+                "fieldTransfer": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "taskTransfer": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        }
+    }
+}

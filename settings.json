@@ -1,0 +1,56 @@
+{
+    "ovSourceUrl": "https://*/",
+    "ovSourceAccessKey": "",
+    "ovSourceSecretKey": "",
+    "ovSourceTrackorType": "",
+    "ovMappingTrackorType": "",
+
+    "ovDestinationUrl": "https://*/",
+    "ovDestinationAccessKey": "",
+    "ovDestinationSecretKey": "",
+
+    "ovSourceFields": {
+        "id": "",
+        "key": "",
+        "type": "",
+        "status": "",
+        "trigger": "",
+        "clearTrigger": "",
+        "sourceTrackorType": "",
+        "sourceKeyField": "",
+        "sourceWP": "",
+        "destinationTrackorType": "",
+        "destinationKeyField": "",
+        "destinationWP": ""
+    },
+    "ovSourceTypes": {
+        "ovToOv": "OV to OV"
+    },
+    "ovSourceStatus": {
+        "enabled": 1
+    },
+    "ovMappingFields": {
+        "class": "",
+        "sourceFieldName": "",
+        "sourceFieldTrackorType": "",
+        "destinationFieldName": "",
+        "destinationFieldTrackorType": "",
+
+        "sourceWPName": "",
+        "sourceOrderNumber": "",
+        "sourceTaskData": "",
+        "destinationWPName": "",
+        "destinationOrderNumber": ""
+    },
+    "ovTaskFields": {
+        "wpId": "id",
+        "wpActive": "active",
+        "taskLabel": "label",
+        "taskDateType": "date_type_id",
+        "taskDynamicDates": "dynamic_dates"
+    },
+    "ovMappingTypes": {
+        "fieldTransfer": "Field Transfer",
+        "taskTransfer": "Task Transfer"
+    }
+}
