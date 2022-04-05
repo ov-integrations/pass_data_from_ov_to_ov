@@ -48,7 +48,7 @@ log_level = ihub_data['logLevel']
 integration_log = IntegrationLog(process_id, ov_source_url, ov_source_access_key, ov_source_secret_key, None, True, log_level)
 source_trackor = SourceTrackor(integration_log, ov_source_url, ov_source_access_key, ov_source_secret_key, ov_source_trackor_type, ov_source_fields, \
                                     ov_source_types, ov_source_status, ov_mapping_trackor_type, ov_mapping_fields, ov_mapping_types)
-destination_trackor = DestinationTrackor(integration_log, ov_destination_url, ov_destination_access_key, ov_destination_secret_key, ov_task_fields)
+destination_trackor = DestinationTrackor(integration_log, ov_destination_url, ov_destination_access_key, ov_destination_secret_key, ov_task_fields, ov_source_fields)
 data_trackor = DataTrackor(integration_log, ov_source_url, ov_source_access_key, ov_source_secret_key, ov_mapping_fields, ov_mapping_types, ov_task_fields)
 integration = Integration(integration_log, source_trackor, destination_trackor, data_trackor)
 
