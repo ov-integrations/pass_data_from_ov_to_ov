@@ -68,7 +68,7 @@ class Integration:
             destination_trackor = None
             fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
             if len(fields_dict) > 0:
-                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, destination_key_field, dest_key_dict, fields_dict)
+                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, trackor_key, dest_key_dict, fields_dict)
             else:
                 is_field_clean_trigger = True
 
@@ -311,7 +311,7 @@ class DestinationTrackor:
                                         Exception [{dest_trackor_type.errors}]')
             return None
 
-    def update_field_data(self, trackor_type, key_field, filter_dict, field_dict):
+    def update_field_data(self, trackor_type, trackor_key, filter_dict, field_dict):
         dest_trackor_type = Trackor(trackorType=trackor_type, URL=self.ov_url, userName=self.ov_access_key, password=self.ov_secret_key, isTokenAuth=True)
 
         dest_trackor_type.update(
@@ -320,10 +320,10 @@ class DestinationTrackor:
         )
 
         if len(dest_trackor_type.errors) == 0:
-            self.integration_log.add(LogLevel.INFO, f'Fields Data updated for {filter_dict[key_field]}')
+            self.integration_log.add(LogLevel.INFO, f'Fields Data updated for {trackor_key}')
             return dest_trackor_type.jsonData, True
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data for {filter_dict[key_field]}: \
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data for {trackor_key}: \
                                         Exception [{dest_trackor_type.errors}]')
             return None, False
 
