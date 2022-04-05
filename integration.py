@@ -67,7 +67,8 @@ class Integration:
             destination_trackor = None
             fields_dict = self.data_trackor.update_fields_dict(field_dict, data)
             if len(fields_dict) > 0:
-                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, trackor_key, dest_key_dict, fields_dict)
+                destination_trackor, is_field_clean_trigger = self.destination_trackor.update_field_data(destination_trackor_type, trackor_key, dest_key_dict, \
+                                                                                                            fields_dict)
             else:
                 is_field_clean_trigger = True
 
@@ -166,7 +167,8 @@ class DataTrackor:
                 source_field_name = field[self.ov_mapping_fields.SOURCE_FIELD_NAME]
 
                 if source_field_name is None:
-                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_field_lists: One or more fields are empty - {self.ov_mapping_fields.SOURCE_FIELD_NAME}')
+                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_field_lists: One or more fields are empty - ' \
+                                                f'{self.ov_mapping_fields.SOURCE_FIELD_NAME}')
 
                 else:
                     field_list.append(source_field_name)
@@ -187,8 +189,8 @@ class DataTrackor:
                 destination_field_name = field[self.ov_mapping_fields.DESTINATION_FIELD_NAME]
 
                 if source_field_name is None or destination_field_name is None:
-                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: One or more fields are empty - {self.ov_mapping_fields.SOURCE_FIELD_NAME}, \
-                                                {self.ov_mapping_fields.DESTINATION_FIELD_NAME}')
+                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: One or more fields are empty - ' \
+                                                f'{self.ov_mapping_fields.SOURCE_FIELD_NAME}, {self.ov_mapping_fields.DESTINATION_FIELD_NAME}')
 
                 else:
                     field_dict.update({destination_field_name: source_field_name})
@@ -199,8 +201,9 @@ class DataTrackor:
                 destination_order_number = field[self.ov_mapping_fields.DESTINATION_ORDER_NUMBER]
 
                 if source_order_number is None or source_task_data is None or destination_order_number is None:
-                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: One or more fields are empty - {self.ov_mapping_fields.SOURCE_ORDER_NUMBER}, \
-                                                {self.ov_mapping_fields.SOURCE_TASK_DATA}, {self.ov_mapping_fields.DESTINATION_ORDER_NUMBER}')
+                    self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: One or more fields are empty - ' \
+                                                f'{self.ov_mapping_fields.SOURCE_ORDER_NUMBER}, {self.ov_mapping_fields.SOURCE_TASK_DATA}, ' \
+                                                    f'{self.ov_mapping_fields.DESTINATION_ORDER_NUMBER}')
 
                 else:
                     task_dict.update({destination_order_number: {source_order_number: source_task_data}})
@@ -306,8 +309,8 @@ class DestinationTrackor:
                 return dest_trackor_type.jsonData[0]
 
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_destination_trackor for {trackor_key}: \
-                                        Exception [{dest_trackor_type.errors}]')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.get_destination_trackor for {trackor_key}:' \
+                                        f'Exception [{dest_trackor_type.errors}]')
             return None
 
     def update_field_data(self, trackor_type, trackor_key, filter_dict, field_dict):
@@ -322,8 +325,8 @@ class DestinationTrackor:
             self.integration_log.add(LogLevel.INFO, f'Fields Data updated for {trackor_key}')
             return dest_trackor_type.jsonData, True
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data for {trackor_key}: \
-                                        Exception [{dest_trackor_type.errors}]')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_field_data for {trackor_key}:' \
+                                        f'Exception [{dest_trackor_type.errors}]')
             return None, False
 
     def get_workplan_id(self, trackor_id, workplan_name):
@@ -374,8 +377,8 @@ class DestinationTrackor:
                         task_label = task[1]
                 
                 if task_label is None:
-                    self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task_data for {trackor_key}: Exception [" \
-                                                {self.ov_task_fields.TASK_LABEL}" is not found in the dictionary]')
+                    self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task_data for {trackor_key}: Exception ["' \
+                                                f'{self.ov_task_fields.TASK_LABEL}" is not found in the dictionary]')
 
                 else:
                     dynamic_dates = task_data[self.ov_task_fields.TASK_DYNAMIC_DATES]
@@ -420,8 +423,8 @@ class DestinationTrackor:
             self.integration_log.add(LogLevel.INFO, f'Task Date updated for Order Number {order_number} for {trackor_key}')
             return True
         else:
-            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task for Order Number {order_number} \
-                                        for {trackor_key}: Exception [{answer.text}]')
+            self.integration_log.add(LogLevel.WARNING, f'Failed to DestinationTrackor.update_task for Order Number {order_number}' \
+                                        f'for {trackor_key}: Exception [{answer.text}]')
             return False
 
 class SourceTrackorFields:
