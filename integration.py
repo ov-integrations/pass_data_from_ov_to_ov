@@ -172,7 +172,7 @@ class DataTrackor:
                     field_list.append(source_field_name)
 
             elif field[self.ov_mapping_fields.CLASS] != self.ov_mapping_types.TASK_TRANSFER:
-                self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_field_lists: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
+                self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_field_lists: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
 
         field_list.append(key_field)
 
@@ -206,7 +206,7 @@ class DataTrackor:
                     task_dict.update({destination_order_number: {source_order_number: source_task_data}})
 
             else:
-                self.integration_log.add(LogLevel.WARNING, f'DataTrackor.get_dicts: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
+                self.integration_log.add(LogLevel.INFO, f'DataTrackor.get_dicts: Unknown class name - {field[self.ov_mapping_fields.CLASS]}')
                 continue
 
         return field_dict, task_dict
