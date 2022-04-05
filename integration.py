@@ -18,12 +18,11 @@ class Integration:
         source_trackors = self.source_trackor.get_source_trackors()
         len_source_trackors = len(source_trackors)
         if len_source_trackors == 0:
-            self.integration_log.add(LogLevel.INFO, f'{self.source_trackor.ov_source_trackor_type_name} Trackors have not been found. Integration is finished.')
-            quit()
-
-        self.integration_log.add(LogLevel.INFO, f'Found {len_source_trackors} {self.source_trackor.ov_source_trackor_type_name} Trackors')
-        for source_trackor in source_trackors:
-            self.data_handler(source_trackor)
+            self.integration_log.add(LogLevel.INFO, f'{self.source_trackor.ov_source_trackor_type_name} Trackors not found')
+        else:
+            self.integration_log.add(LogLevel.INFO, f'Found {len_source_trackors} {self.source_trackor.ov_source_trackor_type_name} Trackors')
+            for source_trackor in source_trackors:
+                self.data_handler(source_trackor)
 
         self.integration_log.add(LogLevel.INFO, 'Integration has been completed')
 
