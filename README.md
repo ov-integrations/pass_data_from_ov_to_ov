@@ -42,7 +42,7 @@ Example of settings.json
         "enabled": 1
     },
     "ovMappingFields": {
-        "class": "TRACKOR_CLASS_ID",
+        "mappingClass": "TRACKOR_CLASS_ID",
         "sourceFieldName": "IFM_OV_FIELD_NAME",
         "sourceFieldTrackorType": "IFM_TRACKOR_TYPE",
         "destinationFieldName": "IFM_EXTERNAL_OV_FIELD_NAME",
