@@ -2,18 +2,10 @@
 
 Module for migration of data from one OneVizion installation to another OneVizion installation
 
-## Requirements
-- python 3
-- python [OneVizion](https://github.com/Onevizion/API-v3) library (pip install onevizion)
-- python [Requests](https://docs.python-requests.org/en/master/) library (pip install requests)
-- python [jsonschema](https://python-jsonschema.readthedocs.io/en/stable/) library (pip install jsonschema)
-
 ## Usage
-1. Install this integration
-2. Import components.xml file
-3. Create and fill IntegrationTrackor and IntegrationFieldMapping Trackor Types.
-3. Fill the integration settings file (see example below)
-4. Enable the integration
+1. Create and fill IntegrationTrackor and IntegrationFieldMapping Trackor Types.
+2. Fill the integration settings file (see example below)
+3. Enable the integration
 
 Example of settings.json
 

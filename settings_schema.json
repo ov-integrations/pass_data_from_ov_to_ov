@@ -3,7 +3,7 @@
     "properties": {
         "ovSourceUrl": {
             "type": "string",
-            "pattern": "^https://.*"
+            "pattern": "^https://.*|^http://.*"
         },
         "ovSourceAccessKey": {
             "type": "string",
@@ -99,15 +99,14 @@
             "type": "object",
             "properties": {
                 "enabled": {
-                    "type": "number",
-                    "minLength": 1
+                    "enum": [1,0]
                 }
             }
         },
         "ovMappingFields" : {
             "type": "object",
             "properties": {
-                "class": {
+                "mappingClass": {
                     "type": "string",
                     "minLength": 1
                 },
