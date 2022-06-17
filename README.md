@@ -6,34 +6,34 @@ Module for migration of data from one OneVizion installation to another OneVizio
 1. Add the module to the Integration Hub, and import components. After that, enable the related rules and automations.
 2. Create and fill IntegrationTrackor and IntegrationFieldMapping Trackor Types.
     * In IntegrationTrackor, you need to fill in the following fields:
-        a. IT:Integration Type = "OV to OV"
-        b. IT:Link to Integration Hub - this should be filled with the link to the module from Integration Hub
-        c. IT:OV Source Trigger - this should contain the field and its value by which the received Trackors will be filtered.
+        1. IT:Integration Type = "OV to OV"
+        2. IT:Link to Integration Hub - this should be filled with the link to the module from Integration Hub
+        3. IT:OV Source Trigger - this should contain the field and its value by which the received Trackors will be filtered.
            The value should be in equal(FIELD_NAME,FIELD_VALUE) format
            Examples:
            equal(P_SEND_IT10021_TO_SANDBOX,1)
            equal(P_SEND_IT10021_TO_SANDBOX,"text")
-        d. IT:OV Source Clear Trigger - this should contain the field and its value, by which the filter will be reset, if all data of this Trackor are moved.
+        4. IT:OV Source Clear Trigger - this should contain the field and its value, by which the filter will be reset, if all data of this Trackor are moved.
            The value should be in the format {"FIELD_NAME": FIELD_VALUE}
            Examples:
            {"P_SEND_IT10021_TO_SANDBOX":0}
            {"P_SEND_IT10021_TO_SANDBOX»:"text»}
-        e. IT:OV Source Trackor Type - here you should specify the Trackor Type from which you want to get the values to move
-        f. IT:OV Source Workplan Name - here you should specify Workplan Name from which the values for moving will be got
-        g. IT:OV Source Key Field - the key by which the data from the source will be filtered in the destination
-        h. IT:OV Destination Trackor Type - the same as item 5, only for the destination
-        i. IT:OV Destination Workplan Name - the same as item 6 for the destination
-        j. IT:OV Destination Key Field - the same as item 7, only for the destination
-        k. IT:Integration Enabled - for the module to consider this Integration Trackor, it should be enabled.
-        l. IT:Integration Error and IT:Integration Error Message are filled with a rule that triggers after the module executes with an error.
+        5. IT:OV Source Trackor Type - here you should specify the Trackor Type from which you want to get the values to move
+        6. IT:OV Source Workplan Name - here you should specify Workplan Name from which the values for moving will be got
+        7. IT:OV Source Key Field - the key by which the data from the source will be filtered in the destination
+        8. IT:OV Destination Trackor Type - the same as item 5, only for the destination
+        9. IT:OV Destination Workplan Name - the same as item 6 for the destination
+        10. IT:OV Destination Key Field - the same as item 7, only for the destination
+        11. IT:Integration Enabled - for the module to consider this Integration Trackor, it should be enabled.
+        12. IT:Integration Error and IT:Integration Error Message are filled with a rule that triggers after the module executes with an error.
     ![picture](image/integration_trackor.png)
     * You also need to add IntegrationFieldMapping for each field/task:
-        a. IFM:OV Field Name - you should select field whose data should be transferred, only fields for Trackor Type specified in IT:OV Source Trackor Type field can be selected.
+        1. IFM:OV Field Name - you should select field whose data should be transferred, only fields for Trackor Type specified in IT:OV Source Trackor Type field can be selected.
            If this field is E-File type, then IFM:E-File transfer field will also be filled, because E-File is transferred in separate way.
-        b. IFM:External OV Field Name - name of the destination field, where the data will be transferred
-        c. IFM:OV Workplan Task - you should select the task you want to transfer.
-        d. It is also necessary to fill in the IFM:Task S/F and IFM:Task Date Pair fields, on the basis of these fields the IFM:Task Data field, which is used by the module for data transfer, will be filled in.
-        e. IFM:External Order Number - the order number of the destination task, to which the data will be transferred
+        2. IFM:External OV Field Name - name of the destination field, where the data will be transferred
+        3. IFM:OV Workplan Task - you should select the task you want to transfer.
+        4. It is also necessary to fill in the IFM:Task S/F and IFM:Task Date Pair fields, on the basis of these fields the IFM:Task Data field, which is used by the module for data transfer, will be filled in.
+        5. IFM:External Order Number - the order number of the destination task, to which the data will be transferred
     ![picture](image/integration_fm_1.png)
     ![picture](image/integration_fm_2.png)
 
