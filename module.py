@@ -530,20 +530,15 @@ class MappingTrackorFields:
         self.mapping_class = ov_mapping_fields[MappingTrackorField.MAPPING_CLASS.value]
         self.efile_transfer = ov_mapping_fields[MappingTrackorField.EFILE_TRANSFER.value]
         self.source_field_name = ov_mapping_fields[MappingTrackorField.SOURCE_FIELD_NAME.value]
-        self.source_field_trackor_type = ov_mapping_fields[MappingTrackorField.SOURCE_FIELD_TRACKOR_TYPE.value]
         self.destination_field_name = ov_mapping_fields[MappingTrackorField.DESTINATION_FIELD_NAME.value]
-        self.destination_field_trackor_type = ov_mapping_fields[MappingTrackorField.DESTINATION_FIELD_TRACKOR_TYPE.value]
 
-        self.source_wp_name = ov_mapping_fields[MappingTrackorField.SOURCE_WP_NAME.value]
         self.source_order_number = ov_mapping_fields[MappingTrackorField.SOURCE_ORDER_NUMBER.value]
         self.source_task_data = ov_mapping_fields[MappingTrackorField.SOURCE_TASK_DATA.value]
-        self.destination_wp_name = ov_mapping_fields[MappingTrackorField.DESTINATION_WP_NAME.value]
         self.destination_order_number = ov_mapping_fields[MappingTrackorField.DESTINATION_ORDER_NUMBER.value]
 
     def get_list(self):
-        return [self.mapping_class, self.efile_transfer, self.source_field_name, self.source_field_trackor_type, self.destination_field_name, \
-                    self.destination_field_trackor_type, self.source_wp_name, self.source_order_number, self.source_task_data, self.destination_wp_name, \
-                        self.destination_order_number]
+        return [self.mapping_class, self.efile_transfer, self.source_field_name, self.destination_field_name, self.source_order_number, self.source_task_data, \
+                    self.destination_order_number]
 
 
 class TaskFields:
@@ -591,14 +586,10 @@ class MappingTrackorField(Enum):
     MAPPING_CLASS = 'mappingClass'
     EFILE_TRANSFER = 'efileTransfer'
     SOURCE_FIELD_NAME = 'sourceFieldName'
-    SOURCE_FIELD_TRACKOR_TYPE = 'sourceFieldTrackorType'
     DESTINATION_FIELD_NAME = 'destinationFieldName'
-    DESTINATION_FIELD_TRACKOR_TYPE = 'destinationFieldTrackorType'
 
-    SOURCE_WP_NAME = 'sourceWPName'
     SOURCE_ORDER_NUMBER = 'sourceOrderNumber'
     SOURCE_TASK_DATA = 'sourceTaskData'
-    DESTINATION_WP_NAME = 'destinationWPName'
     DESTINATION_ORDER_NUMBER = 'destinationOrderNumber'
 
 

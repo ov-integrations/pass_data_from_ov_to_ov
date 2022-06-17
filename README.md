@@ -3,9 +3,41 @@
 Module for migration of data from one OneVizion installation to another OneVizion installation
 
 ## Usage
-1. Create and fill IntegrationTrackor and IntegrationFieldMapping Trackor Types.
-2. Fill the integration settings file (see example below)
-3. Enable the integration
+1. Add the module to the Integration Hub, and import components. After that, enable the related rules and automations.
+2. Create and fill IntegrationTrackor and IntegrationFieldMapping Trackor Types.
+    * In IntegrationTrackor, you need to fill in the following fields:
+        1. IT:Integration Type = "OV to OV"
+        2. IT:Link to Integration Hub - this should be filled with the link to the module from Integration Hub
+        3. IT:OV Source Trigger - this should contain the field and its value by which the received Trackors will be filtered.
+           The value should be in equal(FIELD_NAME,FIELD_VALUE) format
+           Examples:
+           equal(P_SEND_IT10021_TO_SANDBOX,1)
+           equal(P_SEND_IT10021_TO_SANDBOX,"text")
+        4. IT:OV Source Clear Trigger - this should contain the field and its value, by which the filter will be reset, if all data of this Trackor are moved.
+           The value should be in the format {"FIELD_NAME": FIELD_VALUE}
+           Examples:
+           {"P_SEND_IT10021_TO_SANDBOX":0}
+           {"P_SEND_IT10021_TO_SANDBOX»:"text»}
+        5. IT:OV Source Trackor Type - here you should specify the Trackor Type from which you want to get the values to move
+        6. IT:OV Source Workplan Name - here you should specify Workplan Name from which the values for moving will be got
+        7. IT:OV Source Key Field - the key by which the data from the source will be filtered in the destination
+        8. IT:OV Destination Trackor Type - the same as item 5, only for the destination
+        9. IT:OV Destination Workplan Name - the same as item 6 for the destination
+        10. IT:OV Destination Key Field - the same as item 7, only for the destination
+        11. IT:Integration Enabled - for the module to consider this Integration Trackor, it should be enabled.
+        12. IT:Integration Error and IT:Integration Error Message are filled with a rule that triggers after the module executes with an error.
+    ![picture](image/integration_trackor.png)
+    * You also need to add IntegrationFieldMapping for each field/task:
+        1. IFM:OV Field Name - you should select field whose data should be transferred, only fields for Trackor Type specified in IT:OV Source Trackor Type field can be selected.
+           If this field is E-File type, then IFM:E-File transfer field will also be filled, because E-File is transferred in separate way.
+        2. IFM:External OV Field Name - name of the destination field, where the data will be transferred
+        3. IFM:OV Workplan Task - you should select the task you want to transfer.
+        4. It is also necessary to fill in the IFM:Task S/F and IFM:Task Date Pair fields, on the basis of these fields the IFM:Task Data field, which is used by the module for data transfer, will be filled in.
+        5. IFM:External Order Number - the order number of the destination task, to which the data will be transferred
+    ![picture](image/integration_fm_1.png)
+    ![picture](image/integration_fm_2.png)
+
+3. Fill out the module settings file. See the example below, all of the required fields that you needed to fill out in step 2 are already contained there, you only need to fill in ovSourceUrl, ovSourceAccessKey and ovSourceSecretKey, as well as the same data for Destination
 
 Example of settings.json
 
@@ -41,17 +73,17 @@ Example of settings.json
     "ovSourceStatus": {
         "enabled": 1
     },
+    "ovEfileTransfer": {
+        "yes": "1"
+    },
     "ovMappingFields": {
         "mappingClass": "TRACKOR_CLASS_ID",
+        "efileTransfer": "IFM_EFILE_TRANSFER",
         "sourceFieldName": "IFM_OV_FIELD_NAME",
-        "sourceFieldTrackorType": "IFM_TRACKOR_TYPE",
         "destinationFieldName": "IFM_EXTERNAL_OV_FIELD_NAME",
-        "destinationFieldTrackorType": "IFM_EXTERNAL_OV_TT_NAME",
 
-        "sourceWPName": "IFM_OV_WORKPLAN_NAME",
         "sourceOrderNumber": "IFM_ORDER_NUMBER",
         "sourceTaskData": "IFM_TASK_DATA",
-        "destinationWPName": "IFM_EXTERNAL_WORKPLAN_NAME",
         "destinationOrderNumber": "IFM_EXTERNAL_ORDER_NUMBER"
     },
     "ovTaskFields": {

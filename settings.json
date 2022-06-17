@@ -36,14 +36,10 @@
         "mappingClass": "",
         "efileTransfer": "",
         "sourceFieldName": "",
-        "sourceFieldTrackorType": "",
         "destinationFieldName": "",
-        "destinationFieldTrackorType": "",
 
-        "sourceWPName": "",
         "sourceOrderNumber": "",
         "sourceTaskData": "",
-        "destinationWPName": "",
         "destinationOrderNumber": ""
     },
     "ovTaskFields": {
