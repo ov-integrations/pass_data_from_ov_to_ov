@@ -28,9 +28,9 @@ class Module:
         else:
             self._module_log.add(LogLevel.INFO, f'Found {len_source_trackors} {self._trackor_data._ov_source_trackor_type_name} Trackors')
             for source_trackor in source_trackors:
-                source_data, field_dict, task_dict = self.get_source_data(source_trackor)
+                source_data, efile_list, field_dict, efile_dict, task_dict = self.get_source_data(source_trackor)
                 if len(source_data) != 0:
-                    self.update_destination_data(source_trackor, source_data, field_dict, task_dict)
+                    self.update_destination_data(source_trackor, source_data, efile_list, field_dict, efile_dict, task_dict)
 
         self._module_log.add(LogLevel.INFO, 'Module has been completed')
 
@@ -54,8 +54,8 @@ class Module:
 
         else:
             self._module_log.add(LogLevel.INFO, f'Found {len_mapping_trackor_fields} {self._trackor_data._ov_mapping_trackor_type_name} Trackors')
-            field_list = self._data_handler.get_field_lists(mapping_trackor_fields, source_key_field)
-            field_dict, task_dict = self._data_handler.get_dicts(mapping_trackor_fields)
+            field_list, efile_list = self._data_handler.get_field_lists(mapping_trackor_fields, source_key_field)
+            field_dict, efile_dict, task_dict = self._data_handler.get_dicts(mapping_trackor_fields)
 
             try:
                 source_data = self._trackor_data.get_trackor_data(source_trackor_type, field_list, source_trigger)
@@ -69,9 +69,9 @@ class Module:
             else:
                 self._module_log.add(LogLevel.INFO, f'Found {len_source_data} {source_trackor_type} Trackor data to transfer')
 
-        return source_data, field_dict, task_dict
+        return source_data, efile_list, field_dict, efile_dict, task_dict
 
-    def update_destination_data(self, trackor, source_data, field_dict, task_dict):
+    def update_destination_data(self, trackor, source_data, efile_list, field_dict, efile_dict, task_dict):
         source_key_field = trackor[self._trackor_data._ov_source_fields.source_key_field]
         source_trackor_type = trackor[self._trackor_data._ov_source_fields.source_trackor_type]
         source_clear_trigger = json.loads(trackor[self._trackor_data._ov_source_fields.clear_trigger])
@@ -80,8 +80,9 @@ class Module:
         destination_key_field = trackor[self._trackor_data._ov_source_fields.destination_key_field]
         destination_wp = trackor[self._trackor_data._ov_source_fields.destination_wp]
 
+        if_efile_clean_trigger = False
         is_field_clean_trigger = False
-        is_clean_trigger_task  = False
+        is_task_clean_trigger  = False
         for data in source_data:
             trackor_id = data[self._trackor_data._ov_source_fields.id]
             trackor_key = data[source_key_field]
@@ -89,13 +90,17 @@ class Module:
             dest_key_dict = {destination_key_field: trackor_key}
             self._module_log.add(LogLevel.INFO, f'Get {source_trackor_type} Trackor data from - {trackor_key}')
 
-            is_field_clean_trigger, destination_trackor = self.update_field_data(field_dict, data, destination_trackor_type, dest_key_dict, trackor_key)
-            is_clean_trigger_task = self.update_task_data(task_dict, destination_trackor, destination_trackor_type, dest_key_dict, destination_wp, trackor_key, \
-                                                            trackor_id, source_wp)
+            is_field_clean_trigger, destination_trackor = self.update_field_data(field_dict, data, destination_trackor_type, dest_key_dict, trackor_key, \
+                                                                                    is_field_clean_trigger)
+            if_efile_clean_trigger, destination_trackor = self.update_efile_data(source_trackor_type, destination_trackor, destination_trackor_type, \
+                                                                                    dest_key_dict, efile_list, efile_dict, trackor_key, if_efile_clean_trigger)
+            is_task_clean_trigger = self.update_task_data(task_dict, destination_trackor, destination_trackor_type, dest_key_dict, destination_wp, trackor_key, \
+                                                            trackor_id, source_wp, is_task_clean_trigger)
 
-            self.clean_trigger(is_field_clean_trigger, is_clean_trigger_task, source_trackor_type, clean_trigger_dict, source_clear_trigger, trackor_key)
+            self.clean_trigger(if_efile_clean_trigger, is_field_clean_trigger, is_task_clean_trigger, source_trackor_type, clean_trigger_dict, \
+                                    source_clear_trigger, trackor_key)
 
-    def update_field_data(self, field_dict, data, destination_trackor_type, dest_key_dict, trackor_key):
+    def update_field_data(self, field_dict, data, destination_trackor_type, dest_key_dict, trackor_key, is_field_clean_trigger):
         destination_trackor = []
         fields_dict = self._data_handler.update_fields_dict(field_dict, data)
         if len(fields_dict) > 0:
@@ -112,7 +117,37 @@ class Module:
 
         return is_field_clean_trigger, destination_trackor
 
-    def update_task_data(self, task_dict, destination_trackor, destination_trackor_type, dest_key_dict, destination_wp, trackor_key, trackor_id, source_wp):
+    def update_efile_data(self, source_trackor_type, destination_trackor, destination_trackor_type, dest_key_dict, efile_list, efile_dict, trackor_key, \
+                            if_efile_clean_trigger):
+        if len(efile_dict) > 0:
+            if len(destination_trackor) == 0:
+                try:
+                    destination_trackor = self._trackor_data.get_destination_trackor(trackor_key, destination_trackor_type, dest_key_dict)
+                except Exception as e:
+                    self._module_log.add(LogLevel.WARNING, str(e))
+
+            if len(destination_trackor) == 0:
+                self._module_log.add(LogLevel.WARNING, f'Not found {trackor_key} for Trackor Type {destination_trackor_type} - Tasks won''t be updated')
+
+            else:
+                trackor_search = f'equal({self._trackor_data._ov_source_fields.key}, {trackor_key})'
+
+                try:
+                    file_data = self._trackor_data.get_trackor_data(source_trackor_type, efile_list, trackor_search)
+                    efiles_dict = self._data_handler.update_fields_dict(efile_dict, file_data[0])
+                    if_efile_clean_trigger, destination_trackor = self._trackor_data.update_field_data(trackor_key, destination_trackor_type, dest_key_dict, \
+                                                                                                    efiles_dict)
+                    self._module_log.add(LogLevel.INFO, f'E-File Data updated for {trackor_key}')
+                except Exception as e:
+                    self._module_log.add(LogLevel.WARNING, str(e))
+                    if_efile_clean_trigger = False
+        else:  
+            if_efile_clean_trigger = True
+
+        return if_efile_clean_trigger, destination_trackor
+
+    def update_task_data(self, task_dict, destination_trackor, destination_trackor_type, dest_key_dict, destination_wp, trackor_key, trackor_id, source_wp, \
+                            is_task_clean_trigger):
         if len(task_dict) > 0:
             if len(destination_trackor) == 0:
                 try:
@@ -128,12 +163,12 @@ class Module:
                 source_workplan_id = self.get_workplan_id(trackor_id, source_wp)
                 tasks_dict = self._data_handler.get_task_dict(source_workplan_id, task_dict)
                 destination_workplan_id = self.get_workplan_id(destination_trackor_id, destination_wp)
-                is_clean_trigger_task = self._trackor_data.update_task_data(destination_workplan_id, tasks_dict, trackor_key)
+                is_task_clean_trigger = self._trackor_data.update_task_data(destination_workplan_id, tasks_dict, trackor_key)
 
         else:
-            is_clean_trigger_task = True
+            is_task_clean_trigger = True
 
-        return is_clean_trigger_task
+        return is_task_clean_trigger
 
     def get_workplan_id(self, trackor_id, workplan_name):
         workplan_id = []
@@ -149,8 +184,9 @@ class Module:
 
         return workplan_id
 
-    def clean_trigger(self, is_field_clean_trigger, is_clean_trigger_task, source_trackor_type, clean_trigger_dict, source_clear_trigger, trackor_key):
-        if is_field_clean_trigger and is_clean_trigger_task:
+    def clean_trigger(self, if_efile_clean_trigger, is_field_clean_trigger, is_task_clean_trigger, source_trackor_type, clean_trigger_dict, source_clear_trigger, \
+                        trackor_key):
+        if if_efile_clean_trigger and is_field_clean_trigger and is_task_clean_trigger:
             try:
                 self._trackor_data.clean_trigger(trackor_key, source_trackor_type, clean_trigger_dict, source_clear_trigger)
                 self._module_log.add(LogLevel.INFO, f'Trigger has been updated for {trackor_key}')
@@ -162,11 +198,12 @@ class Module:
 
 
 class DataHandler:
-    def __init__(self, module_log, ov_url, ov_access_key, ov_secret_key, ov_mapping_fields, ov_mapping_types, ov_task_fields, workplan_data):
+    def __init__(self, module_log, ov_url, ov_access_key, ov_secret_key, ov_mapping_fields, ov_mapping_types, ov_task_fields, workplan_data, ov_efile_transfer):
         self._module_log = module_log
         self._ov_url = ov_url
         self._ov_access_key = ov_access_key
         self._ov_secret_key = ov_secret_key
+        self._ov_efile_transfer = SourceEfileTransfers(ov_efile_transfer)
         self._ov_mapping_fields = MappingTrackorFields(ov_mapping_fields)
         self._ov_mapping_types = MappingTrackorTypes(ov_mapping_types)
         self._ov_task_fields = TaskFields(ov_task_fields)
@@ -174,7 +211,7 @@ class DataHandler:
 
     def get_field_lists(self, trackor_fields, key_field):
         field_list = []
-
+        efile_list = []
         for field in trackor_fields:
             if field[self._ov_mapping_fields.mapping_class] == self._ov_mapping_types.field_transfer:
                 source_field_name = field[self._ov_mapping_fields.source_field_name]
@@ -183,17 +220,21 @@ class DataHandler:
                     self._module_log.add(LogLevel.WARNING, f'One or more fields are empty - {self._ov_mapping_fields.source_field_name}')
 
                 else:
-                    field_list.append(source_field_name)
+                    if field[self._ov_mapping_fields.efile_transfer] == self._ov_efile_transfer.yes:
+                        efile_list.append(source_field_name)
+                    else:
+                        field_list.append(source_field_name)
 
             elif field[self._ov_mapping_fields.mapping_class] != self._ov_mapping_types.task_transfer:
                 self._module_log.add(LogLevel.INFO, f'Unknown class name - {field[self._ov_mapping_fields.mapping_class]}')
 
         field_list.append(key_field)
 
-        return field_list
+        return field_list, efile_list
 
     def get_dicts(self, trackor_fields):
         field_dict = {}
+        efile_dict = {}
         task_dict  = {}
         for field in trackor_fields:
             if field[self._ov_mapping_fields.mapping_class] == self._ov_mapping_types.field_transfer:
@@ -205,7 +246,10 @@ class DataHandler:
                                             f'{self._ov_mapping_fields.destination_field_name}')
 
                 else:
-                    field_dict.update({destination_field_name: source_field_name})
+                    if field[self._ov_mapping_fields.efile_transfer] == self._ov_efile_transfer.yes:
+                        efile_dict.update({destination_field_name: source_field_name})
+                    else:
+                        field_dict.update({destination_field_name: source_field_name})
 
             elif field[self._ov_mapping_fields.mapping_class] == self._ov_mapping_types.task_transfer:
                 source_order_number      = field[self._ov_mapping_fields.source_order_number]
@@ -223,7 +267,7 @@ class DataHandler:
                 self._module_log.add(LogLevel.INFO, f'Unknown class name - {field[self._ov_mapping_fields.mapping_class]}')
                 continue
 
-        return field_dict, task_dict
+        return field_dict, efile_dict, task_dict
 
     def update_fields_dict(self, fields_dict, data):
         upd_fields_dict = fields_dict.copy()
@@ -328,10 +372,14 @@ class DataHandler:
 
 class TrackorData:
 
-    def __init__(self, ov_url, ov_access_key, ov_secret_key, ov_source_trackor_type, ov_source_fields, ov_source_types, ov_source_status, ov_mapping_trackor_type):
+    def __init__(self, ov_url, ov_access_key, ov_secret_key, ov_source_trackor_type, ov_source_fields, ov_source_types, ov_source_status, ov_mapping_trackor_type, \
+                     ov_dest_url, ov_dest_access_key, ov_dest_secret_key):
         self._ov_url = ov_url
         self._ov_access_key = ov_access_key
         self._ov_secret_key = ov_secret_key
+        self._ov_dest_url = ov_dest_url
+        self._ov_dest_access_key = ov_dest_access_key
+        self._ov_dest_secret_key = ov_dest_secret_key
         self._ov_mapping_trackor_type_name = ov_mapping_trackor_type
         self._ov_source_trackor_type_name = ov_source_trackor_type
         self._ov_source_fields = SourceTrackorFields(ov_source_fields)
@@ -364,7 +412,8 @@ class TrackorData:
         return self._ov_mapping_trackor_type.jsonData
 
     def get_destination_trackor(self, trackor_key, trackor_type, filter_dict):
-        dest_trackor_type = Trackor(trackorType=trackor_type, URL=self._ov_url, userName=self._ov_access_key, password=self._ov_secret_key, isTokenAuth=True)
+        dest_trackor_type = Trackor(trackorType=trackor_type, URL=self._ov_dest_url, userName=self._ov_dest_access_key, password=self._ov_dest_secret_key, \
+                                        isTokenAuth=True)
         dest_trackor_type.read(filters=filter_dict)
 
         if len(dest_trackor_type.errors) != 0:
@@ -382,7 +431,8 @@ class TrackorData:
         return data_trackor_type.jsonData
 
     def update_field_data(self, trackor_key, trackor_type, filter_dict, field_dict):
-        dest_trackor_type = Trackor(trackorType=trackor_type, URL=self._ov_url, userName=self._ov_access_key, password=self._ov_secret_key, isTokenAuth=True)
+        dest_trackor_type = Trackor(trackorType=trackor_type, URL=self._ov_dest_url, userName=self._ov_dest_access_key, password=self._ov_dest_secret_key, \
+                                        isTokenAuth=True)
         dest_trackor_type.update(filters=filter_dict, fields=field_dict)
 
         if len(dest_trackor_type.errors) != 0:
@@ -459,6 +509,11 @@ class SourceTrackorTypes:
         self.ov_to_ov = ov_source_types[SourceTrackorType.OV_TO_OV.value]
 
 
+class SourceEfileTransfers:
+    def __init__(self, ov_source_efile):
+        self.yes = ov_source_efile[SourceEfileTransfer.YES.value]
+
+
 class MappingTrackorTypes:
     def __init__(self, ov_mapping_types):
         self.field_transfer = ov_mapping_types[MappingTrackorType.FIELD_TRANSFER.value]
@@ -473,6 +528,7 @@ class SourceTrackorStatuses:
 class MappingTrackorFields:
     def __init__(self, ov_mapping_fields):
         self.mapping_class = ov_mapping_fields[MappingTrackorField.MAPPING_CLASS.value]
+        self.efile_transfer = ov_mapping_fields[MappingTrackorField.EFILE_TRANSFER.value]
         self.source_field_name = ov_mapping_fields[MappingTrackorField.SOURCE_FIELD_NAME.value]
         self.source_field_trackor_type = ov_mapping_fields[MappingTrackorField.SOURCE_FIELD_TRACKOR_TYPE.value]
         self.destination_field_name = ov_mapping_fields[MappingTrackorField.DESTINATION_FIELD_NAME.value]
@@ -485,8 +541,9 @@ class MappingTrackorFields:
         self.destination_order_number = ov_mapping_fields[MappingTrackorField.DESTINATION_ORDER_NUMBER.value]
 
     def get_list(self):
-        return [self.mapping_class, self.source_field_name, self.source_field_trackor_type, self.destination_field_name, self.destination_field_trackor_type, \
-                    self.source_wp_name, self.source_order_number, self.source_task_data, self.destination_wp_name, self.destination_order_number]
+        return [self.mapping_class, self.efile_transfer, self.source_field_name, self.source_field_trackor_type, self.destination_field_name, \
+                    self.destination_field_trackor_type, self.source_wp_name, self.source_order_number, self.source_task_data, self.destination_wp_name, \
+                        self.destination_order_number]
 
 
 class TaskFields:
@@ -521,6 +578,10 @@ class SourceTrackorType(Enum):
     OV_TO_OV = 'ovToOv'
 
 
+class SourceEfileTransfer(Enum):
+    YES = 'yes'
+
+
 class MappingTrackorType(Enum):
     FIELD_TRANSFER = 'fieldTransfer'
     TASK_TRANSFER = 'taskTransfer'
@@ -528,6 +589,7 @@ class MappingTrackorType(Enum):
 
 class MappingTrackorField(Enum):
     MAPPING_CLASS = 'mappingClass'
+    EFILE_TRANSFER = 'efileTransfer'
     SOURCE_FIELD_NAME = 'sourceFieldName'
     SOURCE_FIELD_TRACKOR_TYPE = 'sourceFieldTrackorType'
     DESTINATION_FIELD_NAME = 'destinationFieldName'

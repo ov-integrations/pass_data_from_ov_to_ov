@@ -29,8 +29,12 @@
     "ovSourceStatus": {
         "enabled": 1
     },
+    "ovEfileTransfer": {
+        "yes": "1"
+    },
     "ovMappingFields": {
         "mappingClass": "",
+        "efileTransfer": "",
         "sourceFieldName": "",
         "sourceFieldTrackorType": "",
         "destinationFieldName": "",

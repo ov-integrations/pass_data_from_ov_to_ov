@@ -103,10 +103,23 @@
                 }
             }
         },
+        "ovEfileTransfer" : {
+            "type": "object",
+            "properties": {
+                "yes": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
         "ovMappingFields" : {
             "type": "object",
             "properties": {
                 "mappingClass": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "efileTransfer": {
                     "type": "string",
                     "minLength": 1
                 },

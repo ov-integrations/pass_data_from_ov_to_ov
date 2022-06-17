@@ -23,6 +23,7 @@ ov_source_trackor_type = settings_data['ovSourceTrackorType']
 ov_source_fields = settings_data['ovSourceFields']
 ov_source_types = settings_data['ovSourceTypes']
 ov_source_status = settings_data['ovSourceStatus']
+ov_efile_transfer = settings_data['ovEfileTransfer']
 
 ov_mapping_trackor_type = settings_data['ovMappingTrackorType']
 ov_mapping_fields = settings_data['ovMappingFields']
@@ -42,8 +43,9 @@ log_level = module_data['logLevel']
 module_log = IntegrationLog(process_id, ov_source_url, ov_source_access_key, ov_source_secret_key, None, True, log_level)
 workplan_data = WorkplanData(ov_source_url, ov_source_access_key, ov_source_secret_key, ov_task_fields)
 trackor_data = TrackorData(ov_source_url, ov_source_access_key, ov_source_secret_key, ov_source_trackor_type, ov_source_fields, ov_source_types, \
-                                ov_source_status, ov_mapping_trackor_type)
-data_handler = DataHandler(module_log, ov_source_url, ov_source_access_key, ov_source_secret_key, ov_mapping_fields, ov_mapping_types, ov_task_fields, workplan_data)
+                                ov_source_status, ov_mapping_trackor_type, ov_destination_url, ov_destination_access_key, ov_destination_secret_key)
+data_handler = DataHandler(module_log, ov_source_url, ov_source_access_key, ov_source_secret_key, ov_mapping_fields, ov_mapping_types, ov_task_fields, \
+                                workplan_data, ov_efile_transfer)
 module = Module(module_log, data_handler, trackor_data, workplan_data)
 
 try:
