@@ -2,4 +2,4 @@ command = python3 start_module.py
 settings_file_name = settings.json
 default_schedule = 0 0 12 * * ?
 read_from_stdout = false
-IHub-213279 = [21.24.0,22.11.0,22.12.0)
+IHub-213279 = [21.24.0,)
